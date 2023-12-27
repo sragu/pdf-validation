@@ -4,11 +4,26 @@
 package pdf.gradle;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LibraryTest {
-    @Test public void testSomeLibraryMethod() {
+    @Test
+    public void encryptedPdf() {
         Library classUnderTest = new Library();
-        assertTrue("someLibraryMethod should return 'true'", classUnderTest.someLibraryMethod());
+        assertFalse("encrypted pdf should return false", classUnderTest.injectedPDF("/Users/sraguram/Downloads/2023_AnnualReviewTrustSummary.pdf"));
+    }
+
+    @Test
+    public void simpleAction() {
+        Library classUnderTest = new Library();
+        assertTrue("should return 'true'", classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test.pdf"));
+    }
+
+    @Test
+    public void multipleActions() {
+        Library classUnderTest = new Library();
+        assertTrue("should return 'true'", classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test_2.pdf"));
     }
 }

@@ -20,48 +20,31 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class Library {
-    public boolean someLibraryMethod() {
-
+    public boolean injectedPDF(String pdfPath) {
         VeraGreenfieldFoundryProvider.initialise();  // to use vera parser
 
-        VeraPDFFoundry pdfFoundry = Foundries.defaultInstance();
-        try (PDFAParser parser = pdfFoundry.createParser(new FileInputStream("/Users/sraguram/Downloads/js_injected_Test_2.pdf"))) {
+        try (VeraPDFFoundry pdfFoundry = Foundries.defaultInstance()) {
+            PDFAParser parser = pdfFoundry.createParser(new FileInputStream(pdfPath));
             PDFAValidator validator;
 
-            //js_injected_Test_2.pdf
-            //js_injected_Test.pdf
+            ClassLoader classLoader = getClass().getClassLoader();
+            ValidationProfile validationProfile = Profiles.profileFromXml(classLoader.getResourceAsStream("verapdf-profile-6-6-1-t01.xml"));
+            validator = pdfFoundry.createValidator(validationProfile, false);
 
-            // validator = pdfFoundry.createValidator(PDFAFlavour.PDFA_1_A, false);
+            // validation profile is downloaded from:
+            // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
+            // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
 
-            try {
-                ClassLoader classLoader = getClass().getClassLoader();
-                ValidationProfile validationProfile = Profiles.profileFromXml(classLoader.getResourceAsStream("verapdf-profile-6-6-1-t01.xml"));
-                validator = pdfFoundry.createValidator(validationProfile, false);
-
-                // validation profile is downloaded from:
-                // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
-                // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
-
-            } catch (JAXBException e) {
-                throw new RuntimeException(e);
-            }
 
             ValidationResult result = validator.validate(parser);
-            if (result.isCompliant()) {
+            System.out.println(result.getFailedChecks().size());
 
-                System.out.println("Valid");
-                // File is a valid PDF/A 1b
-            } else {
-
-                System.out.println(result.getFailedChecks().size());
-
-                System.out.println("Fail");
-                // it isn't
-            }
-        } catch (IOException | ValidationException | ModelParsingException | EncryptedPdfException exception) {
-            // Exception during validation
-            exception.printStackTrace(System.out);
+            return !result.isCompliant();
+        } catch (EncryptedPdfException ignored) {
+        } catch (IOException | ModelParsingException | JAXBException | ValidationException e) {
+            throw new RuntimeException(e);
         }
-        return true;
+
+        return false;
     }
 }
