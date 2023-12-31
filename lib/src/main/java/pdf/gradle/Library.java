@@ -3,19 +3,18 @@
  */
 package pdf.gradle;
 
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
 import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
 import org.verapdf.pdfa.Foundries;
-import org.verapdf.pdfa.PDFAParser;
-import org.verapdf.pdfa.PDFAValidator;
 import org.verapdf.pdfa.VeraPDFFoundry;
-import org.verapdf.pdfa.results.ValidationResult;
 import org.verapdf.pdfa.validation.profiles.Profiles;
-import org.verapdf.pdfa.validation.profiles.ValidationProfile;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -24,24 +23,21 @@ public class Library {
         VeraGreenfieldFoundryProvider.initialise();  // to use vera parser
 
         try (VeraPDFFoundry pdfFoundry = Foundries.defaultInstance()) {
-            PDFAParser parser = pdfFoundry.createParser(new FileInputStream(pdfPath));
-            PDFAValidator validator;
+            var scanningProfile = Resources.getResource("verapdf-profile-6-6-1-t01.xml");
 
-            ClassLoader classLoader = getClass().getClassLoader();
-            ValidationProfile validationProfile = Profiles.profileFromXml(classLoader.getResourceAsStream("verapdf-profile-6-6-1-t01.xml"));
-            validator = pdfFoundry.createValidator(validationProfile, false);
+            var validationProfile = Profiles.profileFromXml(scanningProfile.openStream());
+            var validator = pdfFoundry.createValidator(validationProfile, false);
 
             // validation profile is downloaded from:
             // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
             // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
 
-
-            ValidationResult result = validator.validate(parser);
+            var parser = pdfFoundry.createParser(new File(pdfPath));
+            var result = validator.validate(parser);
             System.out.println(result.getFailedChecks().size());
-
             return !result.isCompliant();
-        } catch (EncryptedPdfException ignored) {
-        } catch (IOException | ModelParsingException | JAXBException | ValidationException e) {
+        } catch (EncryptedPdfException | ValidationException ignored) {
+        } catch (ModelParsingException | JAXBException | IOException e) {
             throw new RuntimeException(e);
         }
 
