@@ -3,7 +3,6 @@
  */
 package pdf.gradle;
 
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
@@ -15,7 +14,6 @@ import org.verapdf.pdfa.validation.profiles.Profiles;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 public class Library {
