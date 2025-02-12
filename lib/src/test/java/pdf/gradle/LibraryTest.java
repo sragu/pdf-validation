@@ -3,27 +3,29 @@
  */
 package pdf.gradle;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LibraryTest {
     @Test
-    public void encryptedPdf() {
+    void encryptedPdf() {
         Library classUnderTest = new Library();
-        assertFalse("encrypted pdf should return false", classUnderTest.injectedPDF("/Users/sraguram/Downloads/2023_AnnualReviewTrustSummary.pdf"));
+        assertFalse(classUnderTest.injectedPDF("/Users/sraguram/Downloads/2023_AnnualReviewTrustSummary.pdf"), 
+            "encrypted pdf should return false");
     }
 
     @Test
-    public void simpleAction() {
+    void simpleAction() {
         Library classUnderTest = new Library();
-        assertTrue("should return 'true'", classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test.pdf"));
+        assertTrue(classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test.pdf"),
+            "should return 'true'");
     }
 
     @Test
-    public void multipleActions() {
+    void multipleActions() {
         Library classUnderTest = new Library();
-        assertTrue("should return 'true'", classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test_2.pdf"));
+        assertTrue(classUnderTest.injectedPDF("/Users/sraguram/Downloads/js_injected_Test_2.pdf"),
+            "should return 'true'");
     }
 }
