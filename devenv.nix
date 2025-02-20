@@ -5,7 +5,7 @@
   env.GREET = "devenv";
 
   # https://devenv.sh/packages/
-  # packages = [ pkgs.git ];
+  packages = [ pkgs.difftastic ];
 
   # https://devenv.sh/languages/
   # languages.rust.enable = true;
