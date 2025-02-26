@@ -3,7 +3,10 @@
  */
 package pdf.gradle;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
@@ -16,9 +19,21 @@ import javax.xml.bind.JAXBException;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * This class provides functionality to validate a PDF file against a specific
+ * PDF/A validation profile using the veraPDF library.
+ */
 public class Library {
+    private static final Logger logger = LoggerFactory.getLogger(Library.class);
+
     public boolean injectedPDF(String pdfPath) {
-        VeraGreenfieldFoundryProvider.initialise();  // to use vera parser
+        Preconditions.checkArgument(pdfPath != null && !pdfPath.trim().isEmpty(), "PDF path cannot be null or empty.");
+
+        File pdfFile = new File(pdfPath);
+        Preconditions.checkArgument(pdfFile.exists(), "PDF file not found: %s", pdfPath);
+        Preconditions.checkArgument(pdfFile.isFile(), "PDF path is not a file: %s", pdfPath);
+
+        VeraGreenfieldFoundryProvider.initialise(); // to use vera parser
 
         try (VeraPDFFoundry pdfFoundry = Foundries.defaultInstance()) {
             var scanningProfile = Resources.getResource("verapdf-profile-6-6-1-t01.xml");
@@ -30,13 +45,17 @@ public class Library {
             // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
             // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
 
-            var parser = pdfFoundry.createParser(new File(pdfPath));
+            var parser = pdfFoundry.createParser(pdfFile);
             var result = validator.validate(parser);
-            System.out.println(result.getFailedChecks().size());
+            logger.info("Number of failed checks: {}", result.getFailedChecks().size());
             return !result.isCompliant();
-        } catch (EncryptedPdfException | ValidationException ignored) {
+        } catch (EncryptedPdfException e) {
+            logger.error("PDF is encrypted: {}", pdfPath, e);
+        } catch (ValidationException e) {
+            logger.error("Validation error occurred while processing: {}", pdfPath, e);
         } catch (ModelParsingException | JAXBException | IOException e) {
-            throw new RuntimeException(e);
+            logger.error("Unexpected error occurred while processing: {}", pdfPath, e);
+            throw new RuntimeException("Error during PDF validation", e);
         }
 
         return false;

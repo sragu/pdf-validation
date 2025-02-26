@@ -4,7 +4,6 @@
  * This generated file contains a sample Java library project to get you started.
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.5/userguide/building_java_projects.html in the Gradle documentation.
  */
-
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
@@ -27,6 +26,9 @@ dependencies {
     implementation libs.guava
 
     implementation 'org.verapdf:validation-model:1.26.5'
+    implementation 'org.slf4j:slf4j-api:2.0.9' // Add slf4j API
+    implementation 'ch.qos.logback:logback-classic:1.4.13' // Add a logging implementation (Logback)
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
