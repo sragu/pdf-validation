@@ -26,29 +26,18 @@ import java.io.IOException;
 public class Library {
     private static final Logger logger = LoggerFactory.getLogger(Library.class);
 
+    Library() {
+        VeraGreenfieldFoundryProvider.initialise(); // to use vera parser
+    }
+
     public boolean containsDisallowedActions(String pdfPath) {
         Preconditions.checkArgument(pdfPath != null && !pdfPath.trim().isEmpty(), "PDF path cannot be null or empty.");
-
         File pdfFile = new File(pdfPath);
         Preconditions.checkArgument(pdfFile.exists(), "PDF file not found: %s", pdfPath);
         Preconditions.checkArgument(pdfFile.isFile(), "PDF path is not a file: %s", pdfPath);
 
-        VeraGreenfieldFoundryProvider.initialise(); // to use vera parser
-
-        try (VeraPDFFoundry pdfFoundry = Foundries.defaultInstance()) {
-            var scanningProfile = Resources.getResource("verapdf-profile-6-6-1-t01.xml");
-
-            var validationProfile = Profiles.profileFromXml(scanningProfile.openStream());
-            var validator = pdfFoundry.createValidator(validationProfile, false);
-
-            // validation profile is downloaded from:
-            // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
-            // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
-
-            var parser = pdfFoundry.createParser(pdfFile);
-            var result = validator.validate(parser);
-            logger.info("Number of failed checks: {}", result.getFailedChecks().size());
-            return !result.isCompliant();
+        try {
+            return validatePdf(pdfFile);
         } catch (EncryptedPdfException e) {
             logger.error("PDF is encrypted: {}", pdfPath, e);
         } catch (ValidationException e) {
@@ -59,5 +48,25 @@ public class Library {
         }
 
         return false;
+    }
+
+    private boolean validatePdf(File pdfFile)
+            throws ModelParsingException, JAXBException, IOException, ValidationException, EncryptedPdfException {
+        try (VeraPDFFoundry pdfFoundry = Foundries.defaultInstance()) {
+            var validationProfile = loadProfile();
+            var validator = pdfFoundry.createValidator(validationProfile, false);
+            var parser = pdfFoundry.createParser(pdfFile);
+            var result = validator.validate(parser);
+            logger.info("Number of failed checks: {}", result.getFailedChecks().size());
+            return !result.isCompliant();
+        }
+    }
+
+    private org.verapdf.pdfa.validation.profiles.ValidationProfile loadProfile() throws IOException, JAXBException {
+        var scanningProfile = Resources.getResource("verapdf-profile-6-6-1-t01.xml");
+        // validation profile is downloaded from:
+        // https://github.com/veraPDF/veraPDF-validation-profiles/wiki/PDFA-Part-1-rules#rule-661-1
+        // https://github.com/veraPDF/veraPDF-validation-profiles/blob/integration/PDF_A/1b/6.6%20Actions/6.6.1%20General/verapdf-profile-6-6-1-t01.xml
+        return Profiles.profileFromXml(scanningProfile.openStream());
     }
 }
