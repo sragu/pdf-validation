@@ -26,7 +26,7 @@ import java.io.IOException;
 public class Library {
     private static final Logger logger = LoggerFactory.getLogger(Library.class);
 
-    public boolean injectedPDF(String pdfPath) {
+    public boolean containsDisallowedActions(String pdfPath) {
         Preconditions.checkArgument(pdfPath != null && !pdfPath.trim().isEmpty(), "PDF path cannot be null or empty.");
 
         File pdfFile = new File(pdfPath);
