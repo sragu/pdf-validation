@@ -17,3 +17,12 @@ devenv.local.nix
 .pre-commit-config.yaml
 
 .vscode/
+
+.jj/
+
+
+.project
+.settings/
+__pycache__/
+.classpath
+.DS_Store
